@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+ToDo | Signup
+{% endblock title %}
+
+
+{% block content %}
+<section class="singup my-5 pt-5" id="singup">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <form action="" method="post" class="shadow p-4">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <div class="d-grid gap-2 col-6 mx-auto my-4">
+                        <button class="btn btn-primary" type="submit">Submit</button>
+                      </div>
+                    <div class="text-center">
+                        <p>If you have already an account. Just <a href="{% url 'login' %}" rel="noopener noreferrer">Login</a> here.</p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+    
+    

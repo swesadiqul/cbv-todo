@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+
+{% block title %}
+    
+{% endblock title %}
+
+
+{% block content %}
+<section class="todo_update my-5 pt-5" id="todo_update">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6  ">
+                <form action="" method="post" class="shadow p-4">
+                    {% csrf_token %}
+                    {{ form }}
+                    <button type="submit" class="btn btn-primary mt-3 px-4">Submit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+    
+    

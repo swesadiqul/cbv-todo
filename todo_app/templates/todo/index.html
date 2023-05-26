@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+
+
+{% block title %}
+ToDo | Home 
+{% endblock title %}
+
+
+{% block content %}
+<section class="home" id="home">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <h2 class="py-5 bg-primary mt-5 text-white text-center">Class Based View Todo Application.</h2>
+                {% if user.is_authenticated %}
+                <h3>Hello, {{ user.username }} ! Welcome to our website.</h3>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+    
+    
