@@ -7,16 +7,13 @@ from django.views.generic.list import ListView
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy, reverse
+from django.shortcuts import redirect
+from django.http import Http404
 
 
 # Create your views here.
 class IndexView(TemplateView):
     template_name = 'todo/index.html'
-
-    def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['name'] = 'Sadiqul Islam'
-        return context
 
 
 class ToDoCreateView(LoginRequiredMixin, CreateView):
@@ -25,6 +22,8 @@ class ToDoCreateView(LoginRequiredMixin, CreateView):
     success_url = '/todo-list/'
 
     def form_valid(self, form):
+        # Set the current user as the owner of the todo item
+        form.instance.user = self.request.user
         messages.success(self.request, 'Todo item created successfully.')
         return super().form_valid(form)
     
@@ -47,7 +46,9 @@ class TodoListView(LoginRequiredMixin, ListView):
     login_url = reverse_lazy('login')  # Specify your login URL
 
     def get_queryset(self):
+        user = self.request.user
         queryset = super().get_queryset()
+        queryset = queryset.filter(user=user)
         status = self.request.GET.get('status')
         q = self.request.GET.get('q')
 
@@ -77,7 +78,33 @@ class TodoUpdateView(LoginRequiredMixin, UpdateView):
     template_name = 'todo/todo_update.html'
     login_url = reverse_lazy('login')
 
+    def get_queryset(self):
+        user = self.request.user
+        queryset = super().get_queryset()
+        queryset = queryset.filter(user=user)  # Filter todos by the logged-in user
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        try:
+            self.object = self.get_object()
+
+            # Check if the user owns the todo item being accessed
+            if self.object.user != self.request.user:
+                messages.error(request, 'You are not allowed to access this todo item.')
+                return redirect('todo_list')
+
+            return super().get(request, *args, **kwargs)
+
+        except Http404:
+            messages.error(request, 'Todo item not found.')
+            return redirect('todo_list')
+
     def form_valid(self, form):
+        # Check if the user owns the todo item being updated
+        if form.instance.user != self.request.user:
+            messages.error(self.request, 'You are not allowed to update this todo item.')
+            return redirect('todo_list')
+
         messages.success(self.request, 'Todo item updated successfully.')
         return super().form_valid(form)
 
@@ -85,8 +112,8 @@ class TodoUpdateView(LoginRequiredMixin, UpdateView):
         if not self.request.user.is_authenticated:
             self.request.session['next'] = self.request.get_full_path()
             return super().handle_no_permission()
-        return super().handle_no_permission()
-    
+        messages.error(self.request, 'You are not allowed to update this todo item.')
+        return redirect('todo_list')
 
     def get_success_url(self):
         return reverse('todo_list')

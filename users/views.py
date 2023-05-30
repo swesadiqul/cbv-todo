@@ -60,28 +60,25 @@ class LoginView(RedirectAuthenticatedUserMixin, View):
             if user is not None:
                 login(request, user)
                 messages.success(request, f"{username} logged in successfully.")
-
-                # Redirect to the requested path if available
-                next_path = request.session.get('next')
-                if next_path:
-                    del request.session['next']  # Clear the stored path from the session
-                    return redirect(next_path)
-
                 return redirect("home")
 
         return render(request, self.template_name, {"form": form, 'message': 'Invalid input. Try again.'})
 
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        if request.user.is_authenticated:
+            # Set session expiry to 15 days (session cookie)
+            request.session.set_expiry(60 * 60 * 24 * 15)
+        return response
+    
 
 class LogoutView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
-        user = self.request.user
-        get_user = User.objects.filter(pk=user.pk).values().first()
-        username = get_user['username'] if get_user else None
-        if username:
-            logout(request)
-            messages.success(request, f"{username} logged out successfully.")
-        return redirect('home')
-    
+        username = request.user.username
+        logout(request)
+        messages.success(request, f"{username} logged out successfully.")
+        return redirect("home")
+
     def handle_no_permission(self):
         if not self.request.user.is_authenticated:
             return HttpResponseRedirect(reverse('login') + '?next=' + self.request.path + '&msg=login_required.')
